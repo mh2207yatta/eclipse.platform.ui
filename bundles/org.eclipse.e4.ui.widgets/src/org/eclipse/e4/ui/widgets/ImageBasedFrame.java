@@ -24,14 +24,15 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DPIChangeEvent;
 import org.eclipse.swt.widgets.ToolBar;
 
 
 public class ImageBasedFrame extends Canvas {
 	//TODO: Change to the public after API freeze
-	private static final String HANDLE_IMAGE= "handleImage"; //$NON-NLS-1$
+	private static final String HANDLE_IMAGE = "handleImage"; //$NON-NLS-1$
 
-	private static final String FRAME_IMAGE= "frameImage"; //$NON-NLS-1$
+	private static final String FRAME_IMAGE = "frameImage"; //$NON-NLS-1$
 
 	private Control framedControl;
 
@@ -74,11 +75,14 @@ public class ImageBasedFrame extends Canvas {
 
 			ImageBasedFrame frame = (ImageBasedFrame) e.widget;
 			if (handleRect.contains(e.x, e.y)) {
-				frame.setCursor(frame.getDisplay().getSystemCursor(SWT.CURSOR_SIZEALL));
+				frame.setCursor(frame.getDisplay().getSystemCursor(SWT.CURSOR_HELP));
 			} else {
 				frame.setCursor(null);
 			}
 		});
+
+		// addListener(SWT.ZoomChanged, event -> updateZoom(new
+		// DPIChangeEvent(currentDeviceZoom, event.detail)));
 
 		toWrap.setParent(this);
 		toWrap.pack(true);
@@ -86,6 +90,7 @@ public class ImageBasedFrame extends Canvas {
 		toWrap.addControlListener(new ControlListener() {
 			@Override
 			public void controlResized(ControlEvent e) {
+				setSize(computeSize(-1, -1));
 				pack(true);
 			}
 
@@ -101,6 +106,9 @@ public class ImageBasedFrame extends Canvas {
 		if (toWrap instanceof ToolBar) {
 			id = "TB";// ((ToolBar) toWrap).getItem(0).getToolTipText(); //$NON-NLS-1$
 		}
+		addListener(SWT.ZoomChanged, event -> updateZoom(new DPIChangeEvent(currentDeviceZoom, event.detail)));
+		// System.out.println("Start\n" + GetJsonFile.getPropertiesAsJson(this, 0, new
+		// HashSet<>()).toString(2));
 	}
 
 	private void setFramedControlLocation() {
@@ -138,10 +146,12 @@ public class ImageBasedFrame extends Canvas {
 		if (vertical) {
 			int width = w1 + framedControl.getSize().x + w3;
 			int height = h1 + handleHeight + framedControl.getSize().y + h3;
+			// System.out.println(width + " " + height);
 			return new Point(width, height);
 		} else {
 			int width = w1 + handleWidth + framedControl.getSize().x + w3;
 			int height = h1 + framedControl.getSize().y + h3;
+			// System.out.println(width + " " + height);
 			return new Point(width, height);
 		}
 	}
@@ -311,7 +321,7 @@ public class ImageBasedFrame extends Canvas {
 				srcRect.height, dstRect.x, dstRect.y, dstRect.width,
 				dstRect.height);
 
-		// Imterior
+		// Interior
 		srcRect.x = w1;
 		srcRect.y = h1;
 		srcRect.width = w2;
@@ -366,6 +376,38 @@ public class ImageBasedFrame extends Canvas {
 				framedControl.setLocation(w1 + handleWidth, h1);
 			}
 		}
+
 		setSize(computeSize(-1, -1));
 	}
+
+	@Override
+	public boolean updateZoom(DPIChangeEvent zoom) {
+	            super.updateZoom(zoom);
+
+				if (this.handle != null) {
+					this.handle.updateZoom(zoom);
+				}
+				if (this.imageCache != null) {
+					this.imageCache.updateZoom(zoom);
+				}
+
+	            var lool = new Integer[] { Math.round(w1 *
+	            zoom.getScalingFactor()), Math.round(w2 * zoom.getScalingFactor()),
+	            Math.round(h1 * zoom.getScalingFactor()), Math.round(h2 *
+	            zoom.getScalingFactor()) };
+				var lool2 = new Integer[] { w1,
+	            w2, h1, h2 };
+
+				this.handleHeight = Math.round(handleHeight * zoom.getScalingFactor());
+				this.handleWidth = Math.round(handleWidth * zoom.getScalingFactor());
+				if (this.imageCache != null) {
+					this.setImages(this.imageCache, lool, this.handle);
+				}
+				this.framedControl.pack(true);
+				this.pack(true);
+				this.layout(true);
+	return draggable;
+
+}
+
 }
