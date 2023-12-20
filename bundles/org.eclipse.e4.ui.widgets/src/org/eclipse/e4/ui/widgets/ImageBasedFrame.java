@@ -81,8 +81,7 @@ public class ImageBasedFrame extends Canvas {
 			}
 		});
 
-		// addListener(SWT.ZoomChanged, event -> updateZoom(new
-		// DPIChangeEvent(currentDeviceZoom, event.detail)));
+		addListener(SWT.ZoomChanged, event -> updateZoom(new DPIChangeEvent(currentDeviceZoom, event.detail)));
 
 		toWrap.setParent(this);
 		toWrap.pack(true);
@@ -106,9 +105,6 @@ public class ImageBasedFrame extends Canvas {
 		if (toWrap instanceof ToolBar) {
 			id = "TB";// ((ToolBar) toWrap).getItem(0).getToolTipText(); //$NON-NLS-1$
 		}
-		addListener(SWT.ZoomChanged, event -> updateZoom(new DPIChangeEvent(currentDeviceZoom, event.detail)));
-		// System.out.println("Start\n" + GetJsonFile.getPropertiesAsJson(this, 0, new
-		// HashSet<>()).toString(2));
 	}
 
 	private void setFramedControlLocation() {
@@ -382,32 +378,27 @@ public class ImageBasedFrame extends Canvas {
 
 	@Override
 	public boolean updateZoom(DPIChangeEvent zoom) {
-	            super.updateZoom(zoom);
+		super.updateZoom(zoom);
 
-				if (this.handle != null) {
-					this.handle.updateZoom(zoom);
-				}
-				if (this.imageCache != null) {
-					this.imageCache.updateZoom(zoom);
-				}
+		// TODO: Should not be accessed
+		if (this.handle != null) {
+			this.handle.updateZoom(zoom);
+		}
+		if (this.imageCache != null)
 
-	            var lool = new Integer[] { Math.round(w1 *
-	            zoom.getScalingFactor()), Math.round(w2 * zoom.getScalingFactor()),
-	            Math.round(h1 * zoom.getScalingFactor()), Math.round(h2 *
-	            zoom.getScalingFactor()) };
-				var lool2 = new Integer[] { w1,
-	            w2, h1, h2 };
+		{
+			this.imageCache.updateZoom(zoom);
+		}
 
-				this.handleHeight = Math.round(handleHeight * zoom.getScalingFactor());
-				this.handleWidth = Math.round(handleWidth * zoom.getScalingFactor());
-				if (this.imageCache != null) {
-					this.setImages(this.imageCache, lool, this.handle);
-				}
-				this.framedControl.pack(true);
-				this.pack(true);
-				this.layout(true);
-	return draggable;
+		if (this.imageCache != null) {
+			this.setImages(this.imageCache, null, this.handle);
+		}
+		this.framedControl.pack(true);
 
-}
+		setFramedControlLocation();
+		this.pack(true);
+		this.layout(true);
+		return draggable;
+	}
 
 }
